@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Product Recommender</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f5f5f5;
+    }
+
+    header {
+      background: #0077cc;
+      padding: 15px;
+      color: white;
+      text-align: center;
+    }
+
+    #searchBar {
+      padding: 10px;
+      width: 50%;
+      font-size: 18px;
+      border: none;
+      margin-top: 10px;
+      border-radius: 5px;
+    }
+
+    .category-buttons {
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .category-buttons button {
+      margin: 10px;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      background-color: #ff6600;
+      color: white;
+      font-size: 16px;
+    }
+
+    .category-buttons button:hover {
+      background-color: #cc5200;
+    }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .product-card {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
+      transition: 0.3s;
+      cursor: pointer;
+    }
+
+    .product-card:hover {
+      transform: scale(1.03);
+    }
+
+    .product-card img {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    .rating {
+      color: gold;
+      font-size: 18px;
+    }
+
+    .feedback {
+      color: #555;
+      font-style: italic;
+    }
+
+    /* Product detail view */
+    .product-detail {
+      display: none;
+      padding: 30px;
+      max-width: 700px;
+      margin: 50px auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0px 3px 10px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+
+    .product-detail img {
+      width: 80%;
+      max-height: 350px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+
+    .back-btn {
+      background: #0077cc;
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 8px;
+      font-size: 16px;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+
+    .back-btn:hover {
+      background: #005fa3;
+    }
+
+    .description {
+      text-align: justify;
+      color: #444;
+      font-size: 16px;
+      margin-top: 15px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>AI Predictive Product Recommender</h1>
+  <input type="text" id="searchBar" placeholder="Search for phones, shoes, toys, etc..." onkeyup="filterProducts()">
+</header>
+
+<div class="category-buttons">
+  <button onclick="filterCategory('all')">All</button>
+  <button onclick="filterCategory('electronics')">Electronics</button>
+  <button onclick="filterCategory('fashion')">Fashion</button>
+  <button onclick="filterCategory('home')">Home Appliances</button>
+  <button onclick="filterCategory('toys')">Toys</button>
+  <button onclick="filterCategory('beauty')">Beauty</button>
+</div>
+
+<div class="category-buttons">
+  <button onclick="filterPrice('low')">Low (Below ₹2,000)</button>
+  <button onclick="filterPrice('medium')">Medium (₹2,000 - ₹10,000)</button>
+  <button onclick="filterPrice('high')">High (Above ₹10,000)</button>
+</div>
+
+<div class="product-grid" id="productGrid"></div>
+
+<div class="product-detail" id="productDetail">
+  <img id="detailImage" src="" alt="Product Image">
+  <h2 id="detailName"></h2>
+  <p><b>Brand:</b> <span id="detailBrand"></span></p>
+  <p><b>Category:</b> <span id="detailCategory"></span></p>
+  <p><b>Price:</b> <span id="detailPrice"></span></p>
+  <p class="rating">⭐ <span id="detailRating"></span></p>
+  <p class="feedback" id="detailFeedback"></p>
+  <p class="description" id="detailDescription"></p>
+  <button class="back-btn" onclick="goBack()">⬅ Back to Products</button>
+</div>
+
+<script>
+  const products = [
+    {
+      name:"Samsung Galaxy S23",
+      category:"electronics",
+      brand:"Samsung",
+      price:"₹79,999",
+      rating:4.8,
+      feedback:"Excellent camera and performance",
+      image:"C:/Users/nithyashree R E/OneDrive/Desktop/sum.jpeg",
+      description:"The Samsung Galaxy S23 comes with a 6.1-inch Dynamic AMOLED display, Snapdragon 8 Gen 2 processor, and a triple-camera setup with stunning night photography. Ideal for professionals and gamers."
+    },
+    {
+      name:"HP Laptop",
+      category:"electronics",
+      brand:"HP",
+      price:"₹55,000",
+      rating:4.5,
+      feedback:"Great for students",
+      image:"C:/Users/nithyashree R E/OneDrive/Desktop/hp.jpg",
+      description:"HP Laptop delivers reliable performance with an Intel Core i5 processor, 8GB RAM, and 512GB SSD storage. Perfect for study, work, and entertainment."
+    },
+    {
+      name:"Nike Shoes",
+      category:"fashion",
+      brand:"Nike",
+      price:"₹5,999",
+      rating:4.7,
+      feedback:"Very comfortable for running",
+      image:"C:/Users/nithyashree R E/OneDrive/Desktop/nike.jpg",
+      description:"Nike running shoes designed with breathable mesh and cushioned sole. Provides high comfort, durability, and grip for daily wear or sports."
+    },
+    {
+      name:"Leather Jacket",
+      category:"fashion",
+      brand:"Zara",
+      price:"₹7,499",
+      rating:4.6,
+      feedback:"Premium quality",
+      image:"C:/Users/nithyashree R E/OneDrive/Desktop/jacket.jpg",
+      description:"Zara's genuine leather jacket with a modern slim fit design. Adds elegance and style to your wardrobe, suitable for all seasons."
+    },
+    {
+      name:"LG Refrigerator",
+      category:"home",
+      brand:"LG",
+      price:"₹28,999",
+      rating:4.4,
+      feedback:"Energy efficient",
+      image:"C:/Users/nithyashree R E/OneDrive/Desktop/images.jpeg",
+      description:"LG’s 260L double-door refrigerator ensures energy efficiency with smart inverter technology. Keeps food fresh and cool for longer."
+    },
+    {
+      name:"Washing Machine",
+      category:"home",
+      brand:"Samsung",
+      price:"₹22,499",
+      rating:4.3,
+      feedback:"Silent and powerful",
+      image:"C:/Users/nithyashree R E/OneDrive/Desktop/wash.jpg",
+      description:"Samsung’s front-load washing machine provides powerful cleaning with EcoBubble technology and silent operation."
+    },
+    {
+      name:"LEGO Classic Brick Set",
+      category:"toys",
+      brand:"LEGO",
+      price:"₹3,499",
+      rating:4.8,
+      feedback:"Encourages creativity for kids",
+      image:"C:/Users/nithyashree R E/Downloads/brick.jpg",
+      description:"LEGO Classic Brick Set includes 500+ colorful pieces for endless building possibilities that inspire imagination and creativity."
+    },
+    {
+      name:"Remote Control Car",
+      category:"toys",
+      brand:"Hot Wheels",
+      price:"₹1,999",
+      rating:4.6,
+      feedback:"Fun and durable RC toy",
+      image:"C:/Users/nithyashree R E/Downloads/remote car.jpg",
+      description:"A high-speed RC car by Hot Wheels featuring long battery life and shock-resistant body — perfect for kids and collectors."
+    },
+    {
+      name:"Doll House Set",
+      category:"toys",
+      brand:"Barbie",
+      price:"₹4,299",
+      rating:4.5,
+      feedback:"Great gift for kids",
+      image:"C:/Users/nithyashree R E/Downloads/doll.jpg",
+      description:"Barbie Doll House Set includes furniture and accessories for imaginative play. A perfect gift for young creators."
+    },
+    {
+      name:"Maybelline Lipstick",
+      category:"beauty",
+      brand:"Maybelline",
+      price:"₹499",
+      rating:4.4,
+      feedback:"Long-lasting and vibrant color",
+      image:"C:/Users/nithyashree R E/Downloads/maybelline.jpg",
+      description:"Maybelline matte lipstick offers rich pigment and 12-hour wear with moisturizing ingredients that keep lips soft."
+    },
+    {
+      name:"L’Oreal Shampoo",
+      category:"beauty",
+      brand:"L’Oreal",
+      price:"₹349",
+      rating:4.5,
+      feedback:"Makes hair smooth and shiny",
+      image:"C:/Users/nithyashree R E/Downloads/loreal.jpg",
+      description:"L’Oreal shampoo strengthens hair, adds shine, and protects from pollution and damage. Suitable for daily use."
+    },
+    {
+      name:"Nivea Face Cream",
+      category:"beauty",
+      brand:"Nivea",
+      price:"₹299",
+      rating:4.3,
+      feedback:"Hydrating and gentle on skin",
+      image:"C:/Users/nithyashree R E/Downloads/Nivea.jpg",
+      description:"Nivea moisturizing face cream keeps your skin soft, hydrated, and fresh all day. Suitable for all skin types."
+    }
+  ];
+
+  const productGrid = document.getElementById("productGrid");
+  const detailView = document.getElementById("productDetail");
+  let currentList = [...products];
+
+  function displayProducts(list) {
+    currentList = list;
+    productGrid.style.display = "grid";
+    detailView.style.display = "none";
+    productGrid.innerHTML = "";
+
+    if (list.length === 0) {
+      productGrid.innerHTML = "<p style='text-align:center;color:#777;'>No products found.</p>";
+      return;
+    }
+
+    list.forEach((p, index) => {
+      productGrid.innerHTML += `
+        <div class="product-card" onclick="showDetail(${index})">
+          <img src="${p.image}" alt="${p.name}">
+          <h3>${p.name}</h3>
+          <p><b>Brand:</b> ${p.brand}</p>
+          <p><b>Price:</b> ${p.price}</p>
+          <p class="rating">⭐ ${p.rating}</p>
+          <p class="feedback">"${p.feedback}"</p>
+        </div>`;
+    });
+  }
+
+  function showDetail(index) {
+    const p = currentList[index];
+    document.getElementById("detailImage").src = p.image;
+    document.getElementById("detailName").textContent = p.name;
+    document.getElementById("detailBrand").textContent = p.brand;
+    document.getElementById("detailCategory").textContent = p.category;
+    document.getElementById("detailPrice").textContent = p.price;
+    document.getElementById("detailRating").textContent = p.rating;
+    document.getElementById("detailFeedback").textContent = p.feedback;
+    document.getElementById("detailDescription").textContent = p.description;
+
+    productGrid.style.display = "none";
+    detailView.style.display = "block";
+  }
+
+  function goBack() {
+    displayProducts(currentList);
+  }
+
+  function getNumericPrice(price) {
+    return parseInt(price.replace(/[₹,]/g, ''));
+  }
+
+  function filterProducts() {
+    const input = document.getElementById("searchBar").value.toLowerCase();
+    const filtered = products.filter(p =>
+      p.name.toLowerCase().includes(input) ||
+      p.brand.toLowerCase().includes(input) ||
+      p.category.toLowerCase().includes(input)
+    );
+    displayProducts(filtered);
+  }
+
+  function filterCategory(category) {
+    if (category === "all") {
+      displayProducts(products);
+    } else {
+      displayProducts(products.filter(p => p.category === category));
+    }
+  }
+
+  function filterPrice(range) {
+    let filtered = [];
+    if (range === "low") {
+      filtered = products.filter(p => getNumericPrice(p.price) < 2000);
+    } else if (range === "medium") {
+      filtered = products.filter(p => getNumericPrice(p.price) >= 2000 && getNumericPrice(p.price) <= 10000);
+    } else if (range === "high") {
+      filtered = products.filter(p => getNumericPrice(p.price) > 10000);
+    }
+    displayProducts(filtered);
+  }
+
+  // Initial display
+  displayProducts(products);
+</script>
+
+</body>
+</html>
+
+
